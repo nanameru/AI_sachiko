@@ -1,0 +1,25 @@
+# ベースイメージ
+FROM node:18-alpine
+
+# 作業ディレクトリの設定
+WORKDIR /app
+
+# パッケージマネージャーの設定
+RUN npm install -g npm@latest
+
+# 依存関係のインストール
+COPY package*.json ./
+RUN npm install
+
+# TypeScriptの設定
+COPY tsconfig.json ./
+
+# ソースコードのコピー
+COPY . .
+
+# 開発サーバーの起動
+CMD ["npm", "run", "dev"]
+
+# ヘルスチェック
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost:3000 || exit 1

@@ -1,0 +1,39 @@
+# ベースイメージ
+FROM node:18-alpine
+
+# 必要なパッケージのインストール
+RUN apk add --no-cache python3 make g++
+
+# 作業ディレクトリの設定
+WORKDIR /app
+
+# パッケージマネージャーの設定
+RUN npm install -g npm@latest
+
+# 依存関係のインストール
+COPY package*.json ./
+RUN npm install
+
+# TypeScriptの設定
+COPY tsconfig.json ./
+
+# ソースコードのコピー
+COPY . .
+
+# 開発サーバーの起動
+CMD ["npm", "run", "dev"]
+
+# ヘルスチェック
+HEALTHCHECK --interval=30s --timeout=30s --start-period=5s --retries=3 \
+  CMD wget --quiet --tries=1 --spider http://localhost:4000/health || exit 1
+
+# 環境変数の設定
+ENV NODE_ENV=development
+ENV PORT=4000
+
+# タイムゾーンの設定
+ENV TZ=Asia/Tokyo
+
+# セキュリティ設定
+RUN addgroup -S appgroup && adduser -S appuser -G appgroup
+USER appuser
